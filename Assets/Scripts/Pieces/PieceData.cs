@@ -1,18 +1,14 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PieceData : MonoBehaviour
+// Define la forma de una pieza como un conjunto de celdas relativas a un pivote.
+// No hereda de MonoBehaviour porque es solo un contenedor de datos.
+[CreateAssetMenu(fileName = "PieceData", menuName = "AmoBlock/PieceData")]
+public class PieceData : ScriptableObject
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    [Header("Forma de la pieza")]
+    // cada Vector2Int es un offset (x, y) desde el pivote de la pieza
+    public Vector2Int[] cells;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    [Header("Color de la pieza")]
+    public Color color = Color.cyan;
 }
