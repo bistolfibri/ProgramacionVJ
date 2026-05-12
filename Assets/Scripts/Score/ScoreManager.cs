@@ -1,18 +1,42 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class ScoreManager1 : MonoBehaviour
+// Almacena y actualiza el puntaje del jugador.
+// Notifica a la UI cuando el puntaje cambia.
+public class ScoreManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public static ScoreManager Instance { get; private set; }
+
+    private int currentScore = 0;
+
+    // evento que dispara cuando el puntaje cambia, la UI se suscribe a esto
+    public System.Action<int> OnScoreChanged;
+
+    private void Awake()
     {
-        
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
     }
 
-    // Update is called once per frame
-    void Update()
+    // suma puntos y notifica a la UI
+    public void AddScore(int points)
     {
-        
+        currentScore += points;
+        OnScoreChanged?.Invoke(currentScore);
+    }
+
+    // reinicia el puntaje al empezar una nueva partida
+    public void ResetScore()
+    {
+        currentScore = 0;
+        OnScoreChanged?.Invoke(currentScore);
+    }
+
+    public int GetScore()
+    {
+        return currentScore;
     }
 }
