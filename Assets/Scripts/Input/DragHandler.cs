@@ -1,30 +1,22 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 // Maneja el drag & drop de piezas desde los slots hacia el tablero.
-// Detecta qué pieza agarra el jugador, la mueve con el mouse/dedo,
-// y al soltar valida si puede colocarse en el tablero.
 public class DragHandler : MonoBehaviour
 {
+    [Header("Prefab de celda para el drag")]
+    [SerializeField] private GameObject pieceCellPrefab;
+
     [Header("Configuración")]
-    [SerializeField] private float dragOffsetY = 1f; // offset para que la pieza no quede tapada por el dedo
+    [SerializeField] private float boardCellSize = 1f;
+    [SerializeField] private float grabRadius = 1.2f;
 
-    // índice del slot que se está arrastrando (-1 si no hay ninguno)
     private int draggingSlotIndex = -1;
-
-    // posición original de la pieza antes de arrastrar (para volver si no se puede colocar)
-    private Vector3 originalPosition;
-
-    // GameObjects que representan visualmente la pieza que se arrastra
-    private GameObject[] draggingObjects;
-
-    // datos de la pieza que se arrastra
     private PieceData draggingPieceData;
-
-    // offset entre el punto de toque y el pivote de la pieza
-    private Vector3 grabOffset;
-
+    private GameObject[] draggingObjects;
     private Camera mainCamera;
+
+    // indica si ya empezó el drag (para no agarrar múltiples piezas)
+    private bool isDragging = false;
 
     private void Awake()
     {
@@ -33,149 +25,113 @@ public class DragHandler : MonoBehaviour
 
     private void Update()
     {
-        // detecta inicio del drag (click o toque)
-        if (Input.GetMouseButtonDown(0))
-        {
+        if (Input.GetMouseButtonDown(0) && !isDragging)
             TryStartDrag();
-        }
 
-        // mueve la pieza mientras se arrastra
-        if (Input.GetMouseButton(0) && draggingSlotIndex != -1)
-        {
+        if (isDragging)
             DragPiece();
-        }
 
-        // suelta la pieza
-        if (Input.GetMouseButtonUp(0) && draggingSlotIndex != -1)
-        {
+        if (Input.GetMouseButtonUp(0) && isDragging)
             TryDropPiece();
-        }
     }
 
-    // intenta iniciar el drag si el jugador toca cerca de un slot disponible
     private void TryStartDrag()
     {
         Vector3 mouseWorldPos = GetMouseWorldPosition();
 
-        // revisa los 3 slots para ver si el jugador tocó alguna pieza
         for (int i = 0; i < 3; i++)
         {
             if (PieceSpawner.Instance.IsPieceUsed(i)) continue;
 
             Vector3 slotPos = PieceSpawner.Instance.GetSlotPosition(i);
 
-            // si el mouse está cerca del slot, empieza el drag
-            if (Vector3.Distance(mouseWorldPos, slotPos) < 1.5f)
+            if (Vector3.Distance(mouseWorldPos, slotPos) < grabRadius)
             {
-                StartDrag(i, mouseWorldPos, slotPos);
+                StartDrag(i);
                 return;
             }
         }
     }
 
-    // inicia el drag del slot indicado
-    private void StartDrag(int slotIndex, Vector3 mousePos, Vector3 slotPos)
+    private void StartDrag(int slotIndex)
     {
         draggingSlotIndex = slotIndex;
         draggingPieceData = PieceSpawner.Instance.GetPiece(slotIndex);
-        originalPosition = slotPos;
-        grabOffset = slotPos - mousePos;
-
-        // recrea los objetos visuales de la pieza para poder moverlos
-        draggingObjects = CreateDraggingObjects(draggingPieceData, slotPos);
+        isDragging = true;
+        draggingObjects = CreateDraggingObjects(draggingPieceData);
     }
 
-    // crea objetos visuales temporales para la pieza que se arrastra
-    private GameObject[] CreateDraggingObjects(PieceData pieceData, Vector3 origin)
+    // crea una celda por cada parte de la pieza, todas del mismo tamaño que el tablero
+    private GameObject[] CreateDraggingObjects(PieceData pieceData)
     {
         GameObject[] objects = new GameObject[pieceData.cells.Length];
-        float cellSize = 0.6f; // debe coincidir con el cellSize del PieceSpawner
 
         for (int i = 0; i < pieceData.cells.Length; i++)
         {
-            Vector3 offset = new Vector3(
-                pieceData.cells[i].x * cellSize,
-                pieceData.cells[i].y * cellSize,
-                0f
-            );
-
-            // crea un cuadrado simple para representar la celda mientras se arrastra
-            GameObject cell = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            cell.transform.position = origin + offset;
-            cell.transform.localScale = new Vector3(0.85f, 0.85f, 1f);
-
-            // asigna el color de la pieza
-            SpriteRenderer sr = cell.AddComponent<SpriteRenderer>();
-            Renderer r = cell.GetComponent<Renderer>();
-            if (r != null) r.enabled = false; // desactiva el renderer del Quad, usamos SpriteRenderer
-            sr.color = pieceData.color;
-            sr.sortingOrder = 10; // se dibuja encima de todo
-
+            GameObject cell = Instantiate(pieceCellPrefab, Vector3.zero, Quaternion.identity, transform);
+            // tamaño igual al del tablero para que el jugador vea exactamente cuántas celdas ocupa
+            cell.transform.localScale = new Vector3(0.9f, 0.9f, 1f);
+            cell.GetComponent<SpriteRenderer>().color = pieceData.color;
+            cell.GetComponent<SpriteRenderer>().sortingOrder = 10;
             objects[i] = cell;
         }
 
         return objects;
     }
 
-    // mueve los objetos de la pieza siguiendo el mouse
+    // mueve TODA la pieza junta siguiendo el mouse
     private void DragPiece()
     {
         Vector3 mouseWorldPos = GetMouseWorldPosition();
-        Vector3 targetPos = mouseWorldPos + grabOffset + Vector3.up * dragOffsetY;
 
-        float cellSize = 0.6f;
+        // snappea a la grilla para que la pieza se vea alineada mientras se arrastra
+        float snappedX = Mathf.Round(mouseWorldPos.x);
+        float snappedY = Mathf.Round(mouseWorldPos.y) + 1.5f;
+        Vector3 pivotPos = new Vector3(snappedX, snappedY, 0f);
 
         for (int i = 0; i < draggingPieceData.cells.Length; i++)
         {
             Vector3 offset = new Vector3(
-                draggingPieceData.cells[i].x * cellSize,
-                draggingPieceData.cells[i].y * cellSize,
+                draggingPieceData.cells[i].x * boardCellSize,
+                draggingPieceData.cells[i].y * boardCellSize,
                 0f
             );
-            draggingObjects[i].transform.position = targetPos + offset;
+            draggingObjects[i].transform.position = pivotPos + offset;
         }
     }
 
-    // intenta colocar la pieza en el tablero al soltar
     private void TryDropPiece()
     {
         Vector3 mouseWorldPos = GetMouseWorldPosition();
-        Vector3 dropPos = mouseWorldPos + grabOffset + Vector3.up * dragOffsetY;
+        float snappedX = Mathf.Round(mouseWorldPos.x);
+        float snappedY = Mathf.Round(mouseWorldPos.y) + 1.5f;
+        Vector3 pivotPos = new Vector3(snappedX, snappedY, 0f);
 
-        // convierte la posición del mundo a coordenadas de grilla
-        if (BoardManager.Instance.WorldToGrid(dropPos, out int row, out int col))
+        if (BoardManager.Instance.WorldToGrid(pivotPos, out int row, out int col))
         {
-            // verifica si la pieza puede colocarse en esa posición
             if (BoardManager.Instance.CanPlace(draggingPieceData.cells, row, col))
             {
-                // coloca la pieza y obtiene cuántas líneas se completaron
                 int linesCleared = BoardManager.Instance.PlacePiece(draggingPieceData.cells, row, col);
 
-                // suma puntos si se completaron líneas
                 if (linesCleared > 0)
-                {
                     ScoreManager.Instance.AddScore(linesCleared * 10);
-                }
 
-                // marca la pieza como usada en el spawner
                 PieceSpawner.Instance.MarkPieceAsUsed(draggingSlotIndex);
-
-                // verifica game over
                 GameManager.Instance.CheckGameOver();
 
-                // destruye los objetos temporales del drag
                 DestroyDraggingObjects();
+                isDragging = false;
                 draggingSlotIndex = -1;
                 return;
             }
         }
 
-        // si no se pudo colocar, destruye los objetos temporales (la pieza vuelve a su slot original)
+        // no se pudo colocar, cancela el drag
         DestroyDraggingObjects();
+        isDragging = false;
         draggingSlotIndex = -1;
     }
 
-    // destruye los GameObjects temporales creados para el drag
     private void DestroyDraggingObjects()
     {
         if (draggingObjects == null) return;
@@ -186,7 +142,6 @@ public class DragHandler : MonoBehaviour
         draggingObjects = null;
     }
 
-    // convierte la posición del mouse en pantalla a posición en el mundo
     private Vector3 GetMouseWorldPosition()
     {
         Vector3 mousePos = Input.mousePosition;
