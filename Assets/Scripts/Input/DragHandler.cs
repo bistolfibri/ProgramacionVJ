@@ -9,6 +9,7 @@ public class DragHandler : MonoBehaviour
     [Header("Configuración")]
     [SerializeField] private float boardCellSize = 1f;
     [SerializeField] private float grabRadius = 1.2f;
+    [SerializeField] private float dragOffsetY = 1.5f;
 
     private int draggingSlotIndex = -1;
     private PieceData draggingPieceData;
@@ -85,8 +86,8 @@ public class DragHandler : MonoBehaviour
         Vector3 mouseWorldPos = GetMouseWorldPosition();
 
         // snappea a la grilla para que la pieza se vea alineada mientras se arrastra
-        float snappedX = Mathf.Round(mouseWorldPos.x);
-        float snappedY = Mathf.Round(mouseWorldPos.y) + 1.5f;
+        float snappedX = Mathf.Round(mouseWorldPos.x - 0.5f) + 0.5f;
+        float snappedY = Mathf.Round(mouseWorldPos.y + dragOffsetY - 0.5f) + 0.5f;
         Vector3 pivotPos = new Vector3(snappedX, snappedY, 0f);
 
         for (int i = 0; i < draggingPieceData.cells.Length; i++)
@@ -103,8 +104,8 @@ public class DragHandler : MonoBehaviour
     private void TryDropPiece()
     {
         Vector3 mouseWorldPos = GetMouseWorldPosition();
-        float snappedX = Mathf.Round(mouseWorldPos.x);
-        float snappedY = Mathf.Round(mouseWorldPos.y) + 1.5f;
+        float snappedX = Mathf.Round(mouseWorldPos.x - 0.5f) + 0.5f;
+        float snappedY = Mathf.Round(mouseWorldPos.y + dragOffsetY - 0.5f) + 0.5f;
         Vector3 pivotPos = new Vector3(snappedX, snappedY, 0f);
 
         if (BoardManager.Instance.WorldToGrid(pivotPos, out int row, out int col))

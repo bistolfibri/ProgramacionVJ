@@ -16,7 +16,7 @@ public class PieceSpawner : MonoBehaviour
     [SerializeField] private Transform[] slotPositions; // 3 Transforms vacíos que marcan dónde aparecen las piezas
 
     [Header("Tamaño de celda de pieza")]
-    [SerializeField] private float cellSize = 0.6f; // más chico que el tablero para que entren los 3 slots
+    [SerializeField] private float cellSize = 0.8f; // más chico que el tablero para que entren los 3 slots
 
     // guarda los datos de las 3 piezas del set actual
     private PieceData[] currentSet = new PieceData[3];
@@ -66,15 +66,28 @@ public class PieceSpawner : MonoBehaviour
     {
         GameObject[] objects = new GameObject[pieceData.cells.Length];
 
+        // calcula el centro de la pieza para centrarla en el slot
+        float avgX = 0f;
+        float avgY = 0f;
+        foreach (Vector2Int cell in pieceData.cells)
+        {
+            avgX += cell.x;
+            avgY += cell.y;
+        }
+        avgX /= pieceData.cells.Length;
+        avgY /= pieceData.cells.Length;
+
         for (int i = 0; i < pieceData.cells.Length; i++)
         {
+            // centra la pieza restando el promedio
             Vector3 offset = new Vector3(
-                pieceData.cells[i].x * cellSize,
-                pieceData.cells[i].y * cellSize,
+                (pieceData.cells[i].x - avgX) * cellSize,
+                (pieceData.cells[i].y - avgY) * cellSize,
                 0f
             );
 
             GameObject cell = Instantiate(pieceCellPrefab, origin + offset, Quaternion.identity, transform);
+            cell.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
             cell.GetComponent<SpriteRenderer>().color = pieceData.color;
             objects[i] = cell;
         }

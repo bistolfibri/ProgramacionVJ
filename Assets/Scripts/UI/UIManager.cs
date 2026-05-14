@@ -1,18 +1,19 @@
 using UnityEngine;
 using TMPro;
 
-// Maneja todos los elementos visuales de la interfaz:
-// puntaje en pantalla y pantalla de game over.
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
 
     [Header("Puntaje")]
-    [SerializeField] private TextMeshProUGUI scoreText; // texto que muestra el puntaje actual
+    [SerializeField] private TextMeshProUGUI scoreText;
+
+    [Header("Start Panel")]
+    [SerializeField] private GameObject startPanel;
 
     [Header("Game Over")]
-    [SerializeField] private GameObject gameOverPanel;        // panel que aparece al perder
-    [SerializeField] private TextMeshProUGUI finalScoreText;  // texto con el puntaje final
+    [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private TextMeshProUGUI finalScoreText;
 
     private void Awake()
     {
@@ -26,35 +27,45 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        // se suscribe al evento de cambio de puntaje del ScoreManager
         ScoreManager.Instance.OnScoreChanged += UpdateScoreText;
+        UpdateScoreText(0);
 
-        // empieza con el panel de game over oculto
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
-
-        // muestra puntaje inicial
-        UpdateScoreText(0);
+        if (scoreText != null)
+            scoreText.gameObject.SetActive(false);
     }
 
-    // actualiza el texto del puntaje en pantalla
-    private void UpdateScoreText(int score)
+    public void ShowStartPanel()
+    {
+        if (startPanel != null)
+            startPanel.SetActive(true);
+    }
+
+    public void HideStartPanel()
+    {
+        if (startPanel != null)
+            startPanel.SetActive(false);
+
+        // muestra el puntaje recién cuando empieza el juego
+        if (scoreText != null)
+            scoreText.gameObject.SetActive(true);
+    }
+
+    public void UpdateScoreText(int score)
     {
         if (scoreText != null)
             scoreText.text = "Puntaje: " + score;
     }
 
-    // muestra la pantalla de game over con el puntaje final
     public void ShowGameOver(int finalScore)
     {
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
-
         if (finalScoreText != null)
             finalScoreText.text = "Puntaje final: " + finalScore;
     }
 
-    // oculta la pantalla de game over
     public void HideGameOver()
     {
         if (gameOverPanel != null)

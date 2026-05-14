@@ -1,7 +1,5 @@
 using UnityEngine;
 
-// Controla el flujo general del juego: inicio, verificación de game over.
-// Se comunica con todos los demás sistemas.
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
@@ -18,8 +16,24 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
-    // verifica si alguna de las piezas restantes puede colocarse en el tablero
-    // si ninguna puede, termina la partida
+    private void Start()
+    {
+        // oculta el tablero y las piezas hasta que el jugador apriete Jugar
+        BoardManager.Instance.gameObject.SetActive(false);
+        PieceSpawner.Instance.gameObject.SetActive(false);
+        UIManager.Instance.ShowStartPanel();
+    }
+
+    public void StartGame()
+    {
+        BoardManager.Instance.gameObject.SetActive(true);
+        PieceSpawner.Instance.gameObject.SetActive(true);
+        UIManager.Instance.HideStartPanel();
+        ScoreManager.Instance.ResetScore();
+        BoardManager.Instance.InitializeBoard();
+        PieceSpawner.Instance.SpawnNewSet();
+    }
+
     public void CheckGameOver()
     {
         if (gameOver) return;
@@ -35,12 +49,9 @@ public class GameManager : MonoBehaviour
     private void TriggerGameOver()
     {
         gameOver = true;
-        Debug.Log("Game Over! Puntaje final: " + ScoreManager.Instance.GetScore());
-        // la UI se encarga de mostrar la pantalla de game over
         UIManager.Instance.ShowGameOver(ScoreManager.Instance.GetScore());
     }
 
-    // reinicia el juego completo
     public void RestartGame()
     {
         gameOver = false;
