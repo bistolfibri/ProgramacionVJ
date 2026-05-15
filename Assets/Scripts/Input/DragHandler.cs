@@ -114,8 +114,12 @@ public class DragHandler : MonoBehaviour
             {
                 int linesCleared = BoardManager.Instance.PlacePiece(draggingPieceData.cells, row, col);
 
+                AudioManager.Instance.PlayPlacePiece();
                 if (linesCleared > 0)
+                {
                     ScoreManager.Instance.AddScore(linesCleared * 10);
+                    AudioManager.Instance.PlayLineClear();
+                }
 
                 PieceSpawner.Instance.MarkPieceAsUsed(draggingSlotIndex);
                 GameManager.Instance.CheckGameOver();

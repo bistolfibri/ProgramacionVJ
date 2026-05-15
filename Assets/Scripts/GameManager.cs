@@ -5,6 +5,8 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     private bool gameOver = false;
+    private bool isPaused = false;
+
 
     private void Awake()
     {
@@ -59,5 +61,33 @@ public class GameManager : MonoBehaviour
         BoardManager.Instance.InitializeBoard();
         PieceSpawner.Instance.SpawnNewSet();
         UIManager.Instance.HideGameOver();
+    }
+    public void PauseGame()
+    {
+        isPaused = true;
+        Time.timeScale = 0f;
+        UIManager.Instance.ShowPausePanel();
+    }
+
+    public void ResumeGame()
+    {
+        isPaused = false;
+        Time.timeScale = 1f;
+        UIManager.Instance.HidePausePanel();
+    }
+
+    public void GoToMenu()
+    {
+        isPaused = false;
+        Time.timeScale = 1f;
+        gameOver = false;
+        UIManager.Instance.HidePausePanel();
+        UIManager.Instance.HideGameOver();
+        UIManager.Instance.HidePauseButton(); // agregá esta línea
+        ScoreManager.Instance.ResetScore();
+        BoardManager.Instance.gameObject.SetActive(false);
+        PieceSpawner.Instance.gameObject.SetActive(false);
+        UIManager.Instance.ShowStartPanel();
+        UIManager.Instance.HideScoreText();
     }
 }

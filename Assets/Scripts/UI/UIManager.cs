@@ -15,6 +15,12 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TextMeshProUGUI finalScoreText;
 
+    [Header("Pausa")]
+    [SerializeField] private GameObject pausePanel;
+
+    [Header("Pausa")]
+    [SerializeField] private GameObject pauseButton;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -34,6 +40,8 @@ public class UIManager : MonoBehaviour
             gameOverPanel.SetActive(false);
         if (scoreText != null)
             scoreText.gameObject.SetActive(false);
+        if (pauseButton != null)
+            pauseButton.SetActive(false);
     }
 
     public void ShowStartPanel()
@@ -46,6 +54,8 @@ public class UIManager : MonoBehaviour
     {
         if (startPanel != null)
             startPanel.SetActive(false);
+        if (pauseButton != null)
+            pauseButton.SetActive(true);
 
         // muestra el puntaje recién cuando empieza el juego
         if (scoreText != null)
@@ -62,6 +72,8 @@ public class UIManager : MonoBehaviour
     {
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
+        if (pauseButton != null)
+            pauseButton.SetActive(false);
         if (finalScoreText != null)
             finalScoreText.text = "Puntaje final: " + finalScore;
     }
@@ -70,5 +82,25 @@ public class UIManager : MonoBehaviour
     {
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
+    }
+    public void ShowPausePanel()
+    {
+        if (pausePanel != null)
+            pausePanel.SetActive(true);
+    }
+    public void HidePauseButton()
+    {
+        if (pauseButton != null)
+            pauseButton.SetActive(false);
+    }
+    public void HideScoreText()
+    {
+        if (scoreText != null)
+            scoreText.gameObject.SetActive(false);
+    }
+    public void HidePausePanel()
+    {
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
     }
 }
