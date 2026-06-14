@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cells:
   - {x: 0, y: 0}
-  color: {r: 0.6392157, g: 0.3372549, b: 0.21960784, a: 1}
+  color: {r: 1, g: 0.3137255, b: 0.5882353, a: 1}

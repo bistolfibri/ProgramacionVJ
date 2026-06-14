@@ -5,6 +5,8 @@ public class DragHandler : MonoBehaviour
 {
     [Header("Prefab de celda para el drag")]
     [SerializeField] private GameObject pieceCellPrefab;
+    [Header("Partículas")]
+    [SerializeField] private GameObject placeEffectPrefab;
 
     [Header("Configuración")]
     [SerializeField] private float boardCellSize = 1f;
@@ -121,6 +123,7 @@ public class DragHandler : MonoBehaviour
                 }
 
                 AudioManager.Instance.PlayPlacePiece();
+                SpawnPlaceEffect(pivotPos);
                 PieceSpawner.Instance.MarkPieceAsUsed(draggingSlotIndex);
                 GameManager.Instance.CheckGameOver();
 
@@ -171,5 +174,12 @@ public class DragHandler : MonoBehaviour
         Vector3 mousePos = Input.mousePosition;
         mousePos.z = Mathf.Abs(mainCamera.transform.position.z);
         return mainCamera.ScreenToWorldPoint(mousePos);
+    }
+    private void SpawnPlaceEffect(Vector3 position)
+    {
+        if (placeEffectPrefab == null) return;
+        // instancia el efecto y se autodestruye
+        GameObject effect = Instantiate(placeEffectPrefab, position, Quaternion.identity);
+        Destroy(effect, 1f);
     }
 }
