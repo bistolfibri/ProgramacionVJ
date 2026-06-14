@@ -8,7 +8,13 @@ public class AudioManager : MonoBehaviour
     [Header("Clips de audio")]
     [SerializeField] private AudioClip placePieceClip;  // sonido al colocar pieza
     [SerializeField] private AudioClip lineClearClip;   // sonido al eliminar línea
+    [SerializeField] private AudioClip errorClip; // sonido cuando no se puede colocar
 
+    public void PlayError()
+    {
+        if (errorClip != null)
+            audioSource.PlayOneShot(errorClip);
+    }
     private AudioSource audioSource;
 
     private void Awake()
@@ -31,4 +37,5 @@ public class AudioManager : MonoBehaviour
     {
         audioSource.PlayOneShot(lineClearClip);
     }
+
 }

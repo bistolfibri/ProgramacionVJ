@@ -11,15 +11,13 @@ public class UIManager : MonoBehaviour
     [Header("Start Panel")]
     [SerializeField] private GameObject startPanel;
 
+    [Header("Pausa")]
+    [SerializeField] private GameObject pausePanel;
+    [SerializeField] private GameObject pauseButton;
+
     [Header("Game Over")]
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TextMeshProUGUI finalScoreText;
-
-    [Header("Pausa")]
-    [SerializeField] private GameObject pausePanel;
-
-    [Header("Pausa")]
-    [SerializeField] private GameObject pauseButton;
 
     private void Awake()
     {
@@ -34,32 +32,26 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         ScoreManager.Instance.OnScoreChanged += UpdateScoreText;
-        UpdateScoreText(0);
+        ScoreManager.Instance.OnNewRecord += OnNewRecord;
 
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(false);
-        if (scoreText != null)
-            scoreText.gameObject.SetActive(false);
-        if (pauseButton != null)
-            pauseButton.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (scoreText != null) scoreText.gameObject.SetActive(false);
+        if (pauseButton != null) pauseButton.SetActive(false);
+
+        UpdateScoreText(0);
     }
 
     public void ShowStartPanel()
     {
-        if (startPanel != null)
-            startPanel.SetActive(true);
+        if (startPanel != null) startPanel.SetActive(true);
     }
 
     public void HideStartPanel()
     {
-        if (startPanel != null)
-            startPanel.SetActive(false);
-        if (pauseButton != null)
-            pauseButton.SetActive(true);
-
-        // muestra el puntaje recién cuando empieza el juego
-        if (scoreText != null)
-            scoreText.gameObject.SetActive(true);
+        if (startPanel != null) startPanel.SetActive(false);
+        if (scoreText != null) scoreText.gameObject.SetActive(true);
+        if (pauseButton != null) pauseButton.SetActive(true);
     }
 
     public void UpdateScoreText(int score)
@@ -70,37 +62,53 @@ public class UIManager : MonoBehaviour
 
     public void ShowGameOver(int finalScore)
     {
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(true);
-        if (pauseButton != null)
-            pauseButton.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+        if (pauseButton != null) pauseButton.SetActive(false);
         if (finalScoreText != null)
-            finalScoreText.text = "Puntaje final: " + finalScore;
+            finalScoreText.text = "Puntaje: " + finalScore +
+            "\nRecord: " + ScoreManager.Instance.GetBestScore();
     }
 
     public void HideGameOver()
     {
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (pauseButton != null) pauseButton.SetActive(true);
     }
+
     public void ShowPausePanel()
     {
-        if (pausePanel != null)
-            pausePanel.SetActive(true);
+        if (pausePanel != null) pausePanel.SetActive(true);
     }
-    public void HidePauseButton()
-    {
-        if (pauseButton != null)
-            pauseButton.SetActive(false);
-    }
-    public void HideScoreText()
-    {
-        if (scoreText != null)
-            scoreText.gameObject.SetActive(false);
-    }
+
     public void HidePausePanel()
     {
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(false);
+    }
+
+    public void HidePauseButton()
+    {
+        if (pauseButton != null) pauseButton.SetActive(false);
+    }
+
+    public void HideScoreText()
+    {
+        if (scoreText != null) scoreText.gameObject.SetActive(false);
+    }
+
+    // parpadea el puntaje en amarillo cuando se supera el record
+    private void OnNewRecord()
+    {
+        StartCoroutine(RecordEffect());
+    }
+
+    private System.Collections.IEnumerator RecordEffect()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (scoreText != null) scoreText.color = Color.yellow;
+            yield return new WaitForSeconds(0.2f);
+            if (scoreText != null) scoreText.color = Color.white;
+            yield return new WaitForSeconds(0.2f);
+        }
     }
 }

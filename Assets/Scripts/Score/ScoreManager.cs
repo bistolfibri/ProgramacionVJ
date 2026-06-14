@@ -1,15 +1,14 @@
 using UnityEngine;
 
-// Almacena y actualiza el puntaje del jugador.
-// Notifica a la UI cuando el puntaje cambia.
 public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager Instance { get; private set; }
 
     private int currentScore = 0;
+    private int bestScore = 0;
 
-    // evento que dispara cuando el puntaje cambia, la UI se suscribe a esto
     public System.Action<int> OnScoreChanged;
+    public System.Action OnNewRecord;
 
     private void Awake()
     {
@@ -19,24 +18,31 @@ public class ScoreManager : MonoBehaviour
             return;
         }
         Instance = this;
+
+        // carga el record guardado entre sesiones
+        bestScore = PlayerPrefs.GetInt("BestScore", 0);
     }
 
-    // suma puntos y notifica a la UI
     public void AddScore(int points)
     {
         currentScore += points;
         OnScoreChanged?.Invoke(currentScore);
+
+        // verifica si se superó el record
+        if (currentScore > bestScore)
+        {
+            bestScore = currentScore;
+            PlayerPrefs.SetInt("BestScore", bestScore);
+            OnNewRecord?.Invoke();
+        }
     }
 
-    // reinicia el puntaje al empezar una nueva partida
     public void ResetScore()
     {
         currentScore = 0;
         OnScoreChanged?.Invoke(currentScore);
     }
 
-    public int GetScore()
-    {
-        return currentScore;
-    }
+    public int GetScore() => currentScore;
+    public int GetBestScore() => bestScore;
 }

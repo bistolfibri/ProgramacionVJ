@@ -114,13 +114,13 @@ public class DragHandler : MonoBehaviour
             {
                 int linesCleared = BoardManager.Instance.PlacePiece(draggingPieceData.cells, row, col);
 
-                AudioManager.Instance.PlayPlacePiece();
                 if (linesCleared > 0)
                 {
                     ScoreManager.Instance.AddScore(linesCleared * 10);
                     AudioManager.Instance.PlayLineClear();
                 }
 
+                AudioManager.Instance.PlayPlacePiece();
                 PieceSpawner.Instance.MarkPieceAsUsed(draggingSlotIndex);
                 GameManager.Instance.CheckGameOver();
 
@@ -131,10 +131,8 @@ public class DragHandler : MonoBehaviour
             }
         }
 
-        // no se pudo colocar, cancela el drag
-        DestroyDraggingObjects();
-        isDragging = false;
-        draggingSlotIndex = -1;
+        // no se pudo colocar: muestra feedback rojo y reproduce sonido de error
+        StartCoroutine(ShowInvalidFeedback());
     }
 
     private void DestroyDraggingObjects()
@@ -146,7 +144,28 @@ public class DragHandler : MonoBehaviour
         }
         draggingObjects = null;
     }
+    private System.Collections.IEnumerator ShowInvalidFeedback()
+    {
+        // cambia el color a rojo
+        if (draggingObjects != null)
+        {
+            foreach (GameObject obj in draggingObjects)
+            {
+                if (obj != null)
+                    obj.GetComponent<SpriteRenderer>().color = Color.red;
+            }
+        }
 
+        AudioManager.Instance.PlayError();
+
+        // espera 0.3 segundos
+        yield return new WaitForSeconds(0.3f);
+
+        // cancela el drag
+        DestroyDraggingObjects();
+        isDragging = false;
+        draggingSlotIndex = -1;
+    }
     private Vector3 GetMouseWorldPosition()
     {
         Vector3 mousePos = Input.mousePosition;
